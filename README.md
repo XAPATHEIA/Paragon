@@ -1,2 +1,2 @@
-# TODOListCLI
- Command line todo list using SQLite
+# Command Line To Do List using SQLite
+
