@@ -1,2 +1,2 @@
-# Command Line To Do List using SQLite
+# Command Line To Do List using JSON
 
