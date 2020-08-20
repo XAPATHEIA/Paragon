@@ -7,14 +7,15 @@ tasks = {}
 today = datetime.date.today()
 cd = today.strftime("%d/%m/%Y")
 
-"""description = {"task": "Finish Homework",
-               "completed": False}
-instantiation = {1: description}
-tasks[cd] = instantiation"""
+
+def new_lines(number_of_lines):
+    for i in range(number_of_lines):
+        print()
 
 
 def interface():
     if cd in tasks.keys() and tasks[cd].keys():
+        lack = True
         u_query = int(input(("""What would you like to do?:
 1. Add Task
 2. Mark Completion
@@ -23,18 +24,16 @@ def interface():
 0. Exit
 \n""")))
     else:
+        lack = False
         u_query = int(input(("""What would you like to do?:
 1. Add Task
 0. Exit
 \n""")))
-    return u_query
+    return u_query, lack
 
 
-def add_task(i=0, looped=False):
-    if looped:
-        description_task = input(f"Task {i}: ")
-    else:
-        description_task = input("Task: ")
+def add_task():
+    description_task = input("")
     if description_task == '':
         return description_task
     description_temp = {"task": description_task,
@@ -63,25 +62,27 @@ while True:
             print(f"{n_task}. {tasks[cd][n_task]['task']}")
     print("____________________________\n")
     time.sleep(1)
-    query = interface()
+    query, occupied = interface()
     if query == 1:
         counter = 1
         if input("Would you like to add multiple tasks? Y/N: ").lower() == 'y':
             print("To cancel, press enter.")
             while True:
-                if add_task(i=counter, looped=True) == '':
+                if add_task() == '':
                     break
                 counter += 1
         else:
             print("To cancel, press enter.")
             add_task()
+        new_lines(3)
         time.sleep(1)
-    if query == 2:
+    elif query == 2 and occupied:
         completion()
+        new_lines(3)
         time.sleep(1)
-    if query == 3:
+    elif query == 3 and occupied:
         pass
-    if query == 4:
+    elif query == 4 and occupied:
         pass
-    if query == 0:
+    elif query == 0:
         break
