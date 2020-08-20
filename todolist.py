@@ -13,6 +13,13 @@ def new_lines(number_of_lines):
         print()
 
 
+def strike(text):
+    result = ''
+    for c in text:
+        result = result + c + '\u0336'
+    return result
+
+
 def interface():
     if cd in tasks.keys() and tasks[cd].keys():
         lack = True
@@ -51,15 +58,22 @@ def completion():
     while index := int(input("Enter Task: ")) > len(list(tasks[cd].keys())):
         print("That task doesn't exist. Try again.")
     else:
-        pass
+        if tasks[cd][index]['completed']:
+            tasks[cd][index]['completed'] = False
+        if not tasks[cd][index]['completed']:
+            tasks[cd][index]['completed'] = True
 
 
 # Initiating loop to allow for consecutive additions/removals of tasks
 while True:
     print("******** To-Do List ********")
+    print(tasks)
     if cd in tasks.keys():
         for n_task in tasks[cd].keys():
-            print(f"{n_task}. {tasks[cd][n_task]['task']}")
+            if not tasks[cd][n_task]['completed']:
+                print(f"{n_task}. {tasks[cd][n_task]['task']}")
+            else:
+                strike(tasks[cd][n_task]['task'])
     print("____________________________\n")
     time.sleep(1)
     query, occupied = interface()
