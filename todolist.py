@@ -33,18 +33,43 @@ def interface():
 
 def add_task():
     if cd not in tasks.keys():
+        print("Im here")
+        description_task = input("Task?: ")
+        if description_task == '':
+            return description_task
+        description_temp = {"task": description_task,
+                            "completed": False}
+        tasks[cd][1] = description_temp
+    else:
+        description_task = input("Task?: ")
+        if description_task == '':
+            return description_task
+        description_temp = {"task": description_task,
+                            "completed": False}
+        list_of_tasks = list((tasks[cd].keys()))
+        tasks[cd][(list_of_tasks[-1] + 1)] = description_temp
 
-
+def completion():
+    
 
 
 # Initiating loop to allow for consecutive additions/removals of tasks
 while True:
     print("******** To-Do List ********")
+    if tasks[cd]:
+        for n_task in tasks[cd].keys():
+            print(f"{n_task}. {tasks[cd][n_task]['task']}")
     print("____________________________\n")
     time.sleep(1)
     query = interface()
     if query == 1:
-        pass
+        if input("Would you like to add multiple tasks? Y/N: ").lower() == 'y':
+            print("To exit, press enter.")
+            while True:
+                if add_task() == '':
+                    break
+        else:
+            add_task()
     if query == 2:
         pass
     if query == 3:
