@@ -1,7 +1,6 @@
 import json
 import time
 import datetime
-from TODOListCLI import taskencode
 
 tasks = {}
 today = datetime.date.today()
@@ -128,3 +127,4 @@ while True:
     except ValueError:
         print("Unexpected input received, try again.")
         new_lines(1)
+
