@@ -11,10 +11,15 @@ cd = today.strftime("%d/%m/%Y")
 def new_lines(number_of_lines):
     for i in range(number_of_lines):
         print()
+    time.sleep(1)
 
 
-def strike(text):
+def strike(text, undo=False):
     result = ''
+    if undo:
+        for c in text:
+            result += c.strip('\u0336')
+        return result
     for c in text:
         result = result + c + '\u0336'
     return result
@@ -55,25 +60,29 @@ def add_task():
 
 def completion():
     time.sleep(0.5)
-    while index := int(input("Enter Task: ")) > len(list(tasks[cd].keys())):
+    while (index := int(input("Enter Task: "))) > len(list(tasks[cd].keys())):
         print("That task doesn't exist. Try again.")
     else:
         if tasks[cd][index]['completed']:
             tasks[cd][index]['completed'] = False
-        if not tasks[cd][index]['completed']:
+            tasks[cd][index]['task'] = strike(tasks[cd][index]['task'], undo=True)
+        elif not tasks[cd][index]['completed']:
             tasks[cd][index]['completed'] = True
+            tasks[cd][index]['task'] = strike(tasks[cd][index]['task'])
+
+
+def remove_task(everything=False):
+    time.sleep(0.5)
+    while (index := int(input("Enter Task: "))) > len(list(tasks[cd].keys())):
+        print("That task doesn't exist. Try again.")
 
 
 # Initiating loop to allow for consecutive additions/removals of tasks
 while True:
     print("******** To-Do List ********")
-    print(tasks)
     if cd in tasks.keys():
         for n_task in tasks[cd].keys():
-            if not tasks[cd][n_task]['completed']:
-                print(f"{n_task}. {tasks[cd][n_task]['task']}")
-            else:
-                strike(tasks[cd][n_task]['task'])
+            print(f"{n_task}. {tasks[cd][n_task]['task']}")
     print("____________________________\n")
     time.sleep(1)
     query, occupied = interface()
@@ -89,13 +98,12 @@ while True:
             print("To cancel, press enter.")
             add_task()
         new_lines(3)
-        time.sleep(1)
     elif query == 2 and occupied:
         completion()
         new_lines(3)
-        time.sleep(1)
     elif query == 3 and occupied:
-        pass
+        remove_task()
+        new_lines(3)
     elif query == 4 and occupied:
         pass
     elif query == 0:
