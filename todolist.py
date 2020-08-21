@@ -8,12 +8,14 @@ today = datetime.date.today()
 cd = today.strftime("%d/%m/%Y")
 
 
+# Function used throughout to improve interface.
 def new_lines(number_of_lines):
     for i in range(number_of_lines):
         print()
     time.sleep(1)
 
 
+# Produces the visual feedback of completion/undoing completion.
 def strike(text, undo=False):
     result = ''
     if undo:
@@ -25,6 +27,7 @@ def strike(text, undo=False):
     return result
 
 
+# Interface that user interacts with TO-DO list through.
 def interface():
     if cd in tasks.keys() and tasks[cd].keys():
         lack = True
@@ -58,6 +61,7 @@ def add_task():
         tasks[cd][(list_of_tasks[-1] + 1)] = description_temp
 
 
+# Marks tasks as complete.
 def completion():
     time.sleep(0.5)
     while (index := int(input("Enter Task: "))) > len(list(tasks[cd].keys())):
