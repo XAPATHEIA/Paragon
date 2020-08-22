@@ -1,17 +1,26 @@
 import json
 import time
 import datetime
-import os.path
-
+import os
 
 if not os.path.exists('tasks.json'):
     tasks = {}
 else:
     with open('tasks.json') as json_file:
-        tasks = json.load(json_file)
+        prelim = json.load(json_file)
+        prelim_dates = list(prelim.keys())
+    for entry in prelim_dates:
+        for prelim_task in list(prelim[entry].keys()):
+            prelim[entry][int(prelim_task)] = prelim[entry].pop(prelim_task)
+    tasks = prelim
+    del prelim
 
 today = datetime.date.today()
 cd = today.strftime("%d/%m/%Y")
+
+
+def clear():
+    os.system('cls')
 
 
 # Function used throughout to improve interface.
@@ -19,18 +28,6 @@ def new_lines(number_of_lines):
     for i in range(number_of_lines):
         print()
     time.sleep(1)
-
-
-# Produces the visual feedback of completion/undoing completion.
-def strike(text, undo=False):
-    result = ''
-    if undo:
-        for c in text:
-            result += c.strip('\u0336')
-        return result
-    for c in text:
-        result = result + c + '\u0336'
-    return result
 
 
 # Interface that user interacts with TO-DO list through.
@@ -77,10 +74,10 @@ def completion():
     else:
         if tasks[cd][index]['completed']:
             tasks[cd][index]['completed'] = False
-            tasks[cd][index]['task'] = strike(tasks[cd][index]['task'], undo=True)
+            tasks[cd][index]['task'] = f"{(tasks[cd][index]['task'])[:-17]}"
         elif not tasks[cd][index]['completed']:
             tasks[cd][index]['completed'] = True
-            tasks[cd][index]['task'] = strike(tasks[cd][index]['task'])
+            tasks[cd][index]['task'] = f"{tasks[cd][index]['task']}       [COMPLETE]"
 
 
 def remove_task(everything=False):
@@ -99,8 +96,37 @@ def remove_task(everything=False):
             if key_index > user_index:
                 tasks[cd][key_index - 1] = tasks[cd].pop(key_index)
 
-def archive():
 
+def archive():
+    dates = list(tasks.keys())
+    while True:
+        try:
+            selection = int(input("1. Enter Archive\n"
+                                  "2. Exit\n"))
+            if selection == 2:
+                break
+            elif selection == 1:
+                for j in range(len(dates)):
+                    if j + 1 % 4 == 0:
+                        print(f"[{dates[j]}]")
+                        print()
+                    else:
+                        print(f"[{dates[j]}] ")
+                print()
+                user_input = input("Enter Date: ")
+                if user_input not in dates:
+                    print("Could not find that date, returning.")
+                    time.sleep(1)
+                    break
+                print("____________________________\n"
+                      "Tasks that day: ")
+                for previous_task in tasks[user_input].keys():
+                    print(f"{previous_task}. {tasks[user_input][previous_task]['task']}")
+                print("____________________________\n")
+            else:
+                print("Invalid Input. Returning.")
+        except ValueError:
+            print("Error Occurred: Exiting.")
 
 
 # Initiating loop to allow for consecutive additions/removals of tasks
@@ -124,25 +150,26 @@ while True:
             else:
                 print("To cancel, press enter.")
                 add_task()
-            new_lines(3)
+            clear()
         elif query == 2 and occupied:
             completion()
-            new_lines(3)
+            clear()
         elif query == 3 and occupied:
             remove_task()
-            new_lines(3)
+            clear()
         elif query == 4 and occupied:
             remove_task(everything=True)
-            new_lines(3)
+            clear()
         elif query == 9:
-            pass
+            clear()
+            time.sleep(1)
+            archive()
+            clear()
         elif query == 0:
             break
     except ValueError:
         print("Unexpected input received, try again.")
-        new_lines(1)
+        clear()
 
 with open('tasks.json', 'w') as outfile:
     json.dump(tasks, outfile)
-
-
