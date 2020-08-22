@@ -1,8 +1,15 @@
 import json
 import time
 import datetime
+import os.path
 
-tasks = {}
+
+if not os.path.exists('tasks.json'):
+    tasks = {}
+else:
+    with open('tasks.json') as json_file:
+        tasks = json.load(json_file)
+
 today = datetime.date.today()
 cd = today.strftime("%d/%m/%Y")
 
@@ -35,12 +42,14 @@ def interface():
 2. Mark Completion
 3. Remove Task
 4. Remove All
+9. View Archive
 0. Exit
 """)))
     else:
         lack = False
         u_query = int(input("""What would you like to do?:
 1. Add Task
+9. View Archive
 0. Exit
 """))
     return u_query, lack
@@ -90,6 +99,9 @@ def remove_task(everything=False):
             if key_index > user_index:
                 tasks[cd][key_index - 1] = tasks[cd].pop(key_index)
 
+def archive():
+
+
 
 # Initiating loop to allow for consecutive additions/removals of tasks
 while True:
@@ -122,9 +134,15 @@ while True:
         elif query == 4 and occupied:
             remove_task(everything=True)
             new_lines(3)
+        elif query == 9:
+            pass
         elif query == 0:
             break
     except ValueError:
         print("Unexpected input received, try again.")
         new_lines(1)
+
+with open('tasks.json', 'w') as outfile:
+    json.dump(tasks, outfile)
+
 
