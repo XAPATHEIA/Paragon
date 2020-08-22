@@ -77,7 +77,7 @@ def completion():
             tasks[cd][index]['task'] = f"{(tasks[cd][index]['task'])[:-17]}"
         elif not tasks[cd][index]['completed']:
             tasks[cd][index]['completed'] = True
-            tasks[cd][index]['task'] = f"{tasks[cd][index]['task']}       [COMPLETE]"
+            tasks[cd][index]['task'] = f"{tasks[cd][index]['task']} [COMPLETE]"
 
 
 def remove_task(everything=False):
