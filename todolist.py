@@ -3,22 +3,26 @@ import time
 import datetime
 import os
 
+# If no previous tasks.json is located, start from scratch.
 if not os.path.exists('tasks.json'):
     tasks = {}
 else:
     with open('tasks.json') as json_file:
         prelim = json.load(json_file)
+        # Acquiring the dates to loop through.
         prelim_dates = list(prelim.keys())
     for entry in prelim_dates:
         for prelim_task in list(prelim[entry].keys()):
+            # Turning the task numbers in the dates to integers.
             prelim[entry][int(prelim_task)] = prelim[entry].pop(prelim_task)
     tasks = prelim
     del prelim
 
 today = datetime.date.today()
-cd = today.strftime("%d/%m/%Y")
+cd = today.strftime("%d/%m/%Y")  # Current Date.
 
 
+# Clear Command Line output for improving readability.
 def clear():
     os.system('cls')
 
@@ -32,6 +36,7 @@ def new_lines(number_of_lines):
 
 # Interface that user interacts with TO-DO list through.
 def interface():
+    # If a record exists for the current date.
     if cd in tasks.keys() and tasks[cd].keys():
         lack = True
         u_query = int(input(("""What would you like to do?:
@@ -52,34 +57,41 @@ def interface():
     return u_query, lack
 
 
+# Adds singular or multiple task/s based on user preference.
 def add_task():
     description_task = input("")
     if description_task == '':
         return description_task
     description_temp = {"task": description_task,
                         "completed": False}
+    # If current date doesn't exist in the persistence, create one.
     if cd not in tasks.keys():
         tasks[cd] = {}
         tasks[cd][1] = description_temp
     elif cd in tasks.keys():
         list_of_tasks = list((tasks[cd].keys()))
+        # Changing the numbering of the tasks so that a new task can be added.
         tasks[cd][(list_of_tasks[-1] + 1)] = description_temp
 
 
 # Marks tasks as complete.
 def completion():
     time.sleep(0.5)
+
     while (index := int(input("Enter Task: "))) > len(list(tasks[cd].keys())):
         print("That task doesn't exist. Try again.")
     else:
-        if tasks[cd][index]['completed']:
+        task_completed = tasks[cd][index]['completed']
+        if task_completed:
             tasks[cd][index]['completed'] = False
-            tasks[cd][index]['task'] = f"{(tasks[cd][index]['task'])[:-17]}"
-        elif not tasks[cd][index]['completed']:
+            tasks[cd][index]['task'] = f"{(tasks[cd][index]['task'])[:-11]}"  # Removing completion through slicing.
+
+        elif not task_completed:
             tasks[cd][index]['completed'] = True
             tasks[cd][index]['task'] = f"{tasks[cd][index]['task']} [COMPLETE]"
 
 
+# Removes singular or all task/s based on user preference.
 def remove_task(everything=False):
     time.sleep(0.5)
     if everything:
@@ -97,6 +109,7 @@ def remove_task(everything=False):
                 tasks[cd][key_index - 1] = tasks[cd].pop(key_index)
 
 
+# Visual access to persistence, navigated via date in DD/MM/YYYY format.
 def archive():
     dates = list(tasks.keys())
     while True:
@@ -107,11 +120,10 @@ def archive():
                 break
             elif selection == 1:
                 for j in range(len(dates)):
-                    if j + 1 % 4 == 0:
+                    if (j + 1) % 4 == 0:  # New line every 4 dates, so as to look better.
                         print(f"[{dates[j]}]")
-                        print()
                     else:
-                        print(f"[{dates[j]}] ")
+                        print(f"[{dates[j]}] ", end='')
                 print()
                 user_input = input("Enter Date: ")
                 if user_input not in dates:
@@ -129,13 +141,46 @@ def archive():
             print("Error Occurred: Exiting.")
 
 
-# Initiating loop to allow for consecutive additions/removals of tasks
+# Default tasks for everyday - change to your preference.
+def default():
+    if cd in tasks.keys():
+        return
+    else:
+        default_tasks = [
+            'TEST 1',
+            'TEST 2',
+            'TEST 3',
+            'TEST 4',
+            'TEST 5',
+        ]
+        for task in default_tasks:
+            description_temp = {"task": task,
+                                "completed": False}
+            if cd not in tasks.keys():
+                tasks[cd] = {}
+                tasks[cd][1] = description_temp
+            elif cd in tasks.keys():
+                list_of_tasks = list((tasks[cd].keys()))
+                tasks[cd][(list_of_tasks[-1] + 1)] = description_temp
+
+
+# Progress bar to visualise long term progress.
+def progress_bar():
+    for step in tasks.keys():
+        print(step)
+
+
+progress_bar()
+
+# Adding default tasks.
+default()
+# Initiating loop to allow for consecutive additions/removals of tasks.
 while True:
-    print("******** To-Do List ********")
+    print("______________________________________")
     if cd in tasks.keys():
         for n_task in tasks[cd].keys():
             print(f"{n_task}. {tasks[cd][n_task]['task']}")
-    print("____________________________\n")
+    print("______________________________________\n")
     time.sleep(1)
     try:
         query, occupied = interface()
@@ -171,5 +216,6 @@ while True:
         print("Unexpected input received, try again.")
         clear()
 
+# Creating persistence.
 with open('tasks.json', 'w') as outfile:
     json.dump(tasks, outfile)
