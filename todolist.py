@@ -23,12 +23,8 @@ cd = today.strftime("%d/%m/%Y")  # Current Date.
 
 
 # Clear Command Line output for improving readability.
-def clear(sleep=False):
+def clear():
     os.system('cls')
-    if sleep:
-        time.sleep(1)
-
-
 
 
 # Function used throughout to improve interface.
@@ -174,49 +170,7 @@ def progress_bar():
         print(step)
 
 
-def initial_setup():
-    while True:
-        date_of_birth = input("Date of Birth (dd/mm/yyyy): ")
-        try:
-            horizon = int(input("End Date for Goal (months): "))
-            daily_steps = []
-            print("Enter the daily tasks that will bring you closer to your goal/s. Press'ENTER' to cancel.")
-            i = 1
-            while (small_step := input(f"Task {i}: ")) != '':
-                daily_steps.append(small_step)
-                i += 1
-                continue
-            clear(sleep=True)
-            print(f"Weigh the importance of your tasks - which of these tasks will contribute the most to your goals "
-                  f"and development? Number from 1 to {i}")
-
-        except ValueError as E:
-            print(f"Error Occurred: {E}")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+progress_bar()
 
 # Adding default tasks.
 default()
