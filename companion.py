@@ -1,7 +1,8 @@
 import json
 import time
-import datetime
+import datetime as dt
 import os
+import re
 
 # If no previous tasks.json is located, start from scratch.
 if not os.path.exists('tasks.json'):
@@ -18,7 +19,7 @@ else:
     tasks = prelim
     del prelim
 
-today = datetime.date.today()
+today = dt.date.today()
 cd = today.strftime("%d/%m/%Y")  # Current Date.
 
 
@@ -27,8 +28,6 @@ def clear(sleep=False):
     os.system('cls')
     if sleep:
         time.sleep(1)
-
-
 
 
 # Function used throughout to improve interface.
@@ -175,44 +174,36 @@ def progress_bar():
 
 
 def initial_setup():
+    clear()
+    date_format = re.compile(r'^([0-2][0-9]|(3)[0-1])(/)(((0)[0-9])|((1)[0-2]))(/)\d{4}$')
     while True:
         date_of_birth = input("Date of Birth (dd/mm/yyyy): ")
+        if not date_format.search(date_of_birth):
+            initial_setup()
+        dt.datetime.strptime(date_of_birth, '%d/%m/%Y').strftime("%d/%m/%Y")
         try:
             horizon = int(input("End Date for Goal (months): "))
-            daily_steps = []
+        except ValueError as E:
+            print(f"{E}. Exiting Companion.")
+            initial_setup()
+        else:
+            daily_steps = {}
             print("Enter the daily tasks that will bring you closer to your goal/s. Press'ENTER' to cancel.")
             i = 1
             while (small_step := input(f"Task {i}: ")) != '':
-                daily_steps.append(small_step)
+                daily_steps[small_step] = 1
                 i += 1
                 continue
             clear(sleep=True)
             print(f"Weigh the importance of your tasks - which of these tasks will contribute the most to your goals "
-                  f"and development? Number from 1 to {i}")
-
-        except ValueError as E:
-            print(f"Error Occurred: {E}")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                  f"and development? Make sure the weights add up to 100.")
+            for step in daily_steps:
+                try:
+                    daily_steps[step] = daily_steps[step][int(input(f"{step}: "))]
+                except ValueError as E:
+                    print(f"{E}. Exiting Companion.")
+                    initial_setup()
+                else:
 
 
 
