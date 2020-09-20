@@ -174,45 +174,59 @@ def progress_bar():
 
 
 def initial_setup():
-    clear()
+    clear(sleep=True)
+    print("Executing Initial Setup...")
+    time.sleep(1)
     date_format = re.compile(r'^([0-2][0-9]|(3)[0-1])(/)(((0)[0-9])|((1)[0-2]))(/)\d{4}$')
     while True:
         date_of_birth = input("Date of Birth (dd/mm/yyyy): ")
         if not date_format.search(date_of_birth):
             initial_setup()
-        dt.datetime.strptime(date_of_birth, '%d/%m/%Y').strftime("%d/%m/%Y")
-        try:
-            horizon = int(input("End Date for Goal (months): "))
-        except ValueError as E:
-            print(f"{E}. Exiting Companion.")
+        date_of_birth = dt.datetime.strptime(date_of_birth, '%d/%m/%Y').strftime("%d/%m/%Y")
+        horizon = input("End Date for Goal (dd/mm/yyyy): ")
+        if not date_format.search(horizon):
             initial_setup()
-        else:
-            daily_steps = {}
-            print("Enter the daily tasks that will bring you closer to your goal/s. Press'ENTER' to cancel.")
-            i = 1
-            while (small_step := input(f"Task {i}: ")) != '':
-                daily_steps[small_step] = 1
-                i += 1
-                continue
+        horizon = dt.datetime.strptime(horizon, '%d/%m/%Y').strftime("%d/%m/%Y")
+        daily_steps = {}
+        print("Enter the daily tasks that will bring you closer to your goal/s. Press'ENTER' to cancel.")
+        i = 1
+        while (small_step := input(f"Task {i}: ")) != '':
+            daily_steps[small_step] = None
+            i += 1
+        i -= 1
+        while True:
             clear(sleep=True)
-            print(f"Weigh the importance of your tasks - which of these tasks will contribute the most to your goals "
-                  f"and development? Make sure the weights add up to 100.")
-            for step in daily_steps:
+            print(
+                f"Weigh the importance of your tasks - which of these tasks will contribute the most to your goals "
+                f"and development?\nMake sure the weights add up to 100.")
+            for step in daily_steps.keys():
                 try:
-                    daily_steps[step] = daily_steps[step][int(input(f"{step}: "))]
+                    daily_steps[step] = int(input(f"{step}: "))
                 except ValueError as E:
-                    print(f"{E}. Exiting Companion.")
                     initial_setup()
-                else:
+            if sum(daily_steps.values()) != 100:
+                print("Weights did not add up to 100. Restarting.")
+                initial_setup()
+            else:
+                break
+        clear(sleep=True)
+        print(f"Date of Birth:\n"
+              f"{date_of_birth}\n")
+        print(f"End Date for Goals:\n"
+              f"{horizon}\n")
+        print("Task and Weighting:")
+        for pair in daily_steps.items():
+            print(f"{pair[0].ljust(20)}{pair[1]}")
+        if input("\nWould you like to finalise your companion? (y/n): ") != 'y':
+            initial_setup()
 
 
-
-
+initial_setup()
 
 # Adding default tasks.
-default()
+# default()
 # Initiating loop to allow for consecutive additions/removals of tasks.
-while True:
+"""while True:
     print("______________________________________")
     if cd in tasks.keys():
         for n_task in tasks[cd].keys():
@@ -252,7 +266,7 @@ while True:
     except ValueError:
         print("Unexpected input received, try again.")
         clear()
-
+"""
 # Creating persistence.
 with open('tasks.json', 'w') as outfile:
     json.dump(tasks, outfile)
