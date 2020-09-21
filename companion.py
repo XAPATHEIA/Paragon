@@ -216,11 +216,11 @@ def initial_setup():
         if input("\nWould you like to finalise your companion? (y/n): ") != 'y':
             initial_setup()
         else:
-            return user_data_temp := {'dob': date_of_birth, 'end_date': horizon}, daily_steps_temp, \
-                   starting_date_temp := (dt.datetime.today()).strftime("%d/%m/%Y")
+            return {'dob': date_of_birth, 'start_date': (dt.datetime.today()).strftime("%d/%m/%Y"),
+                    'end_date': horizon}, daily_steps_temp
 
 
-user_data, daily_steps, starting_date = initial_setup()
+user_data, daily_steps, = initial_setup()
 
 
 # TODO: Create a variable that stores the difference of days between the start_date, and the horizon.
@@ -231,7 +231,12 @@ user_data, daily_steps, starting_date = initial_setup()
 #  - two different text representations for the progress bar. One for successful progress, and missed-out on progress.
 # Progress bar to visualise long term progress.
 def progress_bar():
+    days_elapsed = dt.datetime.strptime(user_data['end_date'], "%d/%m/%Y") - \
+                   dt.datetime.strptime(user_data['start_date'], "%d/%m/%Y")
+    print(days_elapsed.total_seconds())
 
+
+progress_bar()
 
 # Adding default tasks.
 # default()
