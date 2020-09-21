@@ -167,12 +167,8 @@ def default():
                 tasks[cd][(list_of_tasks[-1] + 1)] = description_temp
 
 
-# Progress bar to visualise long term progress.
-def progress_bar():
-    for step in tasks.keys():
-        print(step)
-
-
+# TODO: Create persistence for the user_data and daily_steps - create conditionals at the beginning of script to check
+# TODO: whether they exist or not, so that initial_setup() can be ran respectively.
 def initial_setup():
     clear(sleep=True)
     print("Executing Initial Setup...")
@@ -187,11 +183,11 @@ def initial_setup():
         if not date_format.search(horizon):
             initial_setup()
         horizon = dt.datetime.strptime(horizon, '%d/%m/%Y').strftime("%d/%m/%Y")
-        daily_steps = {}
+        daily_steps_temp = {}
         print("Enter the daily tasks that will bring you closer to your goal/s. Press'ENTER' to cancel.")
         i = 1
         while (small_step := input(f"Task {i}: ")) != '':
-            daily_steps[small_step] = None
+            daily_steps_temp[small_step] = None
             i += 1
         i -= 1
         while True:
@@ -199,12 +195,12 @@ def initial_setup():
             print(
                 f"Weigh the importance of your tasks - which of these tasks will contribute the most to your goals "
                 f"and development?\nMake sure the weights add up to 100.")
-            for step in daily_steps.keys():
+            for step in daily_steps_temp.keys():
                 try:
-                    daily_steps[step] = int(input(f"{step}: "))
+                    daily_steps_temp[step] = int(input(f"{step}: "))
                 except ValueError as E:
                     initial_setup()
-            if sum(daily_steps.values()) != 100:
+            if sum(daily_steps_temp.values()) != 100:
                 print("Weights did not add up to 100. Restarting.")
                 initial_setup()
             else:
@@ -215,13 +211,27 @@ def initial_setup():
         print(f"End Date for Goals:\n"
               f"{horizon}\n")
         print("Task and Weighting:")
-        for pair in daily_steps.items():
+        for pair in daily_steps_temp.items():
             print(f"{pair[0].ljust(20)}{pair[1]}")
         if input("\nWould you like to finalise your companion? (y/n): ") != 'y':
             initial_setup()
+        else:
+            return user_data_temp := {'dob': date_of_birth, 'end_date': horizon}, daily_steps_temp, \
+                   starting_date_temp := (dt.datetime.today()).strftime("%d/%m/%Y")
 
 
-initial_setup()
+user_data, daily_steps, starting_date = initial_setup()
+
+
+# TODO: Create a variable that stores the difference of days between the start_date, and the horizon.
+# TODO: Make it so that the progress towards the horizon is re-calculated every time the app is opened.
+# TODO: You need to find a way to:
+#  - subtract two datetime objects
+#  - apply weightings to calculate percentage growth per-day
+#  - two different text representations for the progress bar. One for successful progress, and missed-out on progress.
+# Progress bar to visualise long term progress.
+def progress_bar():
+
 
 # Adding default tasks.
 # default()
