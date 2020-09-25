@@ -4,6 +4,9 @@ import datetime as dt
 import os
 import re
 
+# TODO: Provide option to reset progress bar and initial_setup, but maintain archive that updates old goals in the
+#   background to maintain accountability.
+
 # If no previous tasks.json is located, start from scratch.
 if not os.path.exists('tasks.json'):
     tasks = {}
