@@ -48,6 +48,7 @@ def new_lines(number_of_lines):
         print()
     time.sleep(1)
 
+
 # Datetime Object to String and Vice Versa function.
 def dt_morph(object, reverse=False, circular=False):
     if reverse:
@@ -89,7 +90,7 @@ def add_task():
     if description_task == '':
         return description_task
     description_template = {"task": description_task,
-                        "completed": False}
+                            "completed": False}
     # If current date doesn't exist in the persistence, create one.
     if cd not in tasks.keys():
         tasks[cd] = {}
@@ -189,6 +190,7 @@ def default():
                 list_of_tasks = list((tasks[cd].keys()))
                 tasks[cd][(list_of_tasks[-1] + 1)] = description_temp
 
+
 # TODO: Create "Default" key within each task so that the script cannot get confused by duplicate user input.
 # TODO: Create persistence for the user_data and daily_steps - create conditionals at the beginning of script to check
 # TODO: whether they exist or not, so that initial_setup() can be ran respectively.
@@ -243,7 +245,7 @@ def initial_setup():
                    (dt_morph(horizon, reverse=True) - dt.datetime.today()).total_seconds() / 86400
 
 
-# user_data, daily_steps, days_remaining = initial_setup()
+user_data, daily_steps, days_remaining = initial_setup()
 
 
 # TODO: Make it so that the progress towards the horizon is re-calculated every time the app is opened.
@@ -252,11 +254,26 @@ def initial_setup():
 #  - apply weightings to calculate percentage growth per-day
 # Progress bar to visualise long term progress.
 def progress_bar():
-    day_digit = re.compile(r'^(\d\d)')
+    progress = 100
+    divisor = (days_remaining / 100)
     for k, day in enumerate((dates := list(tasks.keys()))):
-        current, following = int((day_digit.match(day)).group()), int((day_digit.match(dates[k+1])).group())
-        if (difference := current - following) > 1:
-            print("Found")
+        if (difference :=
+        (dt_morph(day, reverse=True).total_seconds()) - (dt_morph(dates[k + 1], reverse=True).total_seconds())) > 86400:
+            progress -= ((difference - 86400) / 86400) / divisor
+        for i in (internal_tasks := list(tasks[day].keys())):
+            for j in internal_tasks:
+                if not tasks[day][j]['completed'] and tasks[day][j]['default']:
+                    progress -= (tasks[day][j]['weighting'] / divisor)
+    for i in range(100):
+        if i == 0:
+            print('0% ', end='')
+        if i < progress:
+            print('█', end='')
+        else:
+            print('░', end='')
+    print(' 100%')
+
+
 
 
 # Adding default tasks.
