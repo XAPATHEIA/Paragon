@@ -7,11 +7,20 @@ import re
 # TODO: Provide option to reset progress bar and initial_setup, but maintain archive that updates old goals in the
 #   background to maintain accountability.
 
-# If no previous tasks.json is located, start from scratch.
-if not os.path.exists('tasks.json'):
+"""
+if not os.path.exists('user_data.json'):
+    user_data, daily_steps = initial_setup()
+    with open('user_data.json', 'w') as data_output:
+        json.dump(user_data, data_output)
+    with open('daily_tasks.json', 'w') as task_output:
+        json.dump(daily_steps, task_output)
+"""
+
+# If no previous log.json is located, create one from scratch.
+if not os.path.exists('log.json'):
     tasks = {}
 else:
-    with open('tasks.json') as json_file:
+    with open('log.json') as json_file:
         prelim = json.load(json_file)
         # Acquiring the dates to loop through.
         prelim_dates = list(prelim.keys())
@@ -39,6 +48,15 @@ def new_lines(number_of_lines):
         print()
     time.sleep(1)
 
+# Datetime Object to String and Vice Versa function.
+def dt_morph(object, reverse=False, circular=False):
+    if reverse:
+        return dt.datetime.strptime(object, '%d/%m/%Y')
+    elif circular:
+        return dt.datetime.strptime(object, '%d/%m/%Y').strftime("%d/%m/%Y")
+    else:
+        return object.strftime("%d/%m/%Y")
+
 
 # Interface that user interacts with TO-DO list through.
 def interface():
@@ -50,6 +68,7 @@ def interface():
 2. Mark Completion
 3. Remove Task
 4. Remove All
+8. Progress
 9. View Archive
 0. Exit
 """)))
@@ -57,6 +76,7 @@ def interface():
         lack = False
         u_query = int(input("""What would you like to do?:
 1. Add Task
+8. Progress
 9. View Archive
 0. Exit
 """))
@@ -68,16 +88,16 @@ def add_task():
     description_task = input("")
     if description_task == '':
         return description_task
-    description_temp = {"task": description_task,
+    description_template = {"task": description_task,
                         "completed": False}
     # If current date doesn't exist in the persistence, create one.
     if cd not in tasks.keys():
         tasks[cd] = {}
-        tasks[cd][1] = description_temp
+        tasks[cd][1] = description_template
     elif cd in tasks.keys():
         list_of_tasks = list((tasks[cd].keys()))
         # Changing the numbering of the tasks so that a new task can be added.
-        tasks[cd][(list_of_tasks[-1] + 1)] = description_temp
+        tasks[cd][(list_of_tasks[-1] + 1)] = description_template
 
 
 # Marks tasks as complete.
@@ -107,7 +127,7 @@ def remove_task(everything=False):
             del tasks[cd]
             return
     else:
-        while (user_index := int(input("Enter Task: "))) > len(list(tasks[cd].keys())):
+        while (user_index := int(input("Enter Task: "))) > len(list(tasks[cd].keys())) or user_index < 1:
             print("That task doesn't exist. Try again.")
         del tasks[cd][user_index]
         for key_index in range(1, len(tasks[cd].keys()) + 2):
@@ -169,7 +189,7 @@ def default():
                 list_of_tasks = list((tasks[cd].keys()))
                 tasks[cd][(list_of_tasks[-1] + 1)] = description_temp
 
-
+# TODO: Create "Default" key within each task so that the script cannot get confused by duplicate user input.
 # TODO: Create persistence for the user_data and daily_steps - create conditionals at the beginning of script to check
 # TODO: whether they exist or not, so that initial_setup() can be ran respectively.
 def initial_setup():
@@ -177,22 +197,21 @@ def initial_setup():
     print("Executing Initial Setup...")
     time.sleep(1)
     date_format = re.compile(r'^([0-2][0-9]|(3)[0-1])(/)(((0)[0-9])|((1)[0-2]))(/)\d{4}$')
+
     while True:
-        date_of_birth = input("Date of Birth (dd/mm/yyyy): ")
-        if not date_format.search(date_of_birth):
-            initial_setup()
-        date_of_birth = dt.datetime.strptime(date_of_birth, '%d/%m/%Y').strftime("%d/%m/%Y")
         horizon = input("End Date for Goal (dd/mm/yyyy): ")
         if not date_format.search(horizon):
             initial_setup()
-        horizon = dt.datetime.strptime(horizon, '%d/%m/%Y').strftime("%d/%m/%Y")
+        horizon = dt_morph(horizon, circular=True)
         daily_steps_temp = {}
         print("Enter the daily tasks that will bring you closer to your goal/s. Press'ENTER' to cancel.")
+
         i = 1
         while (small_step := input(f"Task {i}: ")) != '':
             daily_steps_temp[small_step] = None
             i += 1
         i -= 1
+
         while True:
             clear(sleep=True)
             print(
@@ -208,43 +227,43 @@ def initial_setup():
                 initial_setup()
             else:
                 break
+
         clear(sleep=True)
-        print(f"Date of Birth:\n"
-              f"{date_of_birth}\n")
         print(f"End Date for Goals:\n"
               f"{horizon}\n")
         print("Task and Weighting:")
+
         for pair in daily_steps_temp.items():
             print(f"{pair[0].ljust(20)}{pair[1]}")
         if input("\nWould you like to finalise your companion? (y/n): ") != 'y':
             initial_setup()
         else:
-            return {'dob': date_of_birth, 'start_date': (dt.datetime.today()).strftime("%d/%m/%Y"),
-                    'end_date': horizon}, daily_steps_temp
+            return {'start_date': (dt_morph(dt.datetime.today())), 'end_date': horizon}, \
+                   daily_steps_temp, \
+                   (dt_morph(horizon, reverse=True) - dt.datetime.today()).total_seconds() / 86400
 
 
-user_data, daily_steps, = initial_setup()
+# user_data, daily_steps, days_remaining = initial_setup()
 
 
-# TODO: Create a variable that stores the difference of days between the start_date, and the horizon.
 # TODO: Make it so that the progress towards the horizon is re-calculated every time the app is opened.
+# TODO: Update progress bar accordingly if a date/s is missed in-between two other dates.
 # TODO: You need to find a way to:
-#  - subtract two datetime objects
 #  - apply weightings to calculate percentage growth per-day
-#  - two different text representations for the progress bar. One for successful progress, and missed-out on progress.
 # Progress bar to visualise long term progress.
 def progress_bar():
-    days_elapsed = dt.datetime.strptime(user_data['end_date'], "%d/%m/%Y") - \
-                   dt.datetime.strptime(user_data['start_date'], "%d/%m/%Y")
-    print(days_elapsed.total_seconds())
+    day_digit = re.compile(r'^(\d\d)')
+    for k, day in enumerate((dates := list(tasks.keys()))):
+        current, following = int((day_digit.match(day)).group()), int((day_digit.match(dates[k+1])).group())
+        if (difference := current - following) > 1:
+            print("Found")
 
-
-progress_bar()
 
 # Adding default tasks.
 # default()
 # Initiating loop to allow for consecutive additions/removals of tasks.
-"""while True:
+"""
+while True:
     print("______________________________________")
     if cd in tasks.keys():
         for n_task in tasks[cd].keys():
@@ -274,6 +293,9 @@ progress_bar()
         elif query == 4 and occupied:
             remove_task(everything=True)
             clear()
+        elif query == 8 and occupied:
+            progress_bar()
+            clear()
         elif query == 9:
             clear()
             time.sleep(1)
@@ -286,5 +308,5 @@ progress_bar()
         clear()
 """
 # Creating persistence.
-with open('tasks.json', 'w') as outfile:
+with open('log.json', 'w') as outfile:
     json.dump(tasks, outfile)
