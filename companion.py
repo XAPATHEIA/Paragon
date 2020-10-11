@@ -4,17 +4,102 @@ import datetime as dt
 import os
 import re
 
-# TODO: Provide option to reset progress bar and initial_setup, but maintain archive that updates old goals in the
-#   background to maintain accountability.
 
-"""
-if not os.path.exists('user_data.json'):
-    user_data, daily_steps = initial_setup()
-    with open('user_data.json', 'w') as data_output:
-        json.dump(user_data, data_output)
-    with open('daily_tasks.json', 'w') as task_output:
-        json.dump(daily_steps, task_output)
-"""
+# TODO: Create persistence for the user_data and daily_steps - create conditionals at the beginning of script to check
+# TODO: whether they exist or not, so that initial_setup() can be ran respectively.
+
+# Clear Command Line output for improving readability.
+def clear(sleep=False):
+    os.system('cls')
+    if sleep:
+        time.sleep(1)
+
+
+# Function used throughout to improve interface.
+def new_lines(number_of_lines):
+    for i in range(number_of_lines):
+        print()
+    time.sleep(1)
+
+
+# Datetime Object to String and Vice Versa function.
+def dt_morph(item, reverse=False, circular=False):
+    if reverse:
+        return dt.datetime.strptime(item, '%d/%m/%Y')
+    elif circular:
+        return dt.datetime.strptime(item, '%d/%m/%Y').strftime("%d/%m/%Y")
+    else:
+        return item.strftime("%d/%m/%Y")
+
+
+def initial_setup():
+    clear(sleep=True)
+    print("Executing Initial Setup...")
+    time.sleep(1)
+    date_format = re.compile(r'^([0-2][0-9]|(3)[0-1])(/)(((0)[0-9])|((1)[0-2]))(/)\d{4}$')
+
+    while True:
+        horizon = input("End Date for Goal (dd/mm/yyyy): ")
+        if not date_format.search(horizon):
+            initial_setup()
+        horizon = dt_morph(horizon, circular=True)
+        daily_steps_temp = {}
+        print("Enter the daily tasks that will bring you closer to your goal/s. Press'ENTER' to cancel.")
+
+        i = 1
+        while (small_step := input(f"Task {i}: ")) != '':
+            daily_steps_temp[small_step] = None
+            i += 1
+        i -= 1
+
+        while True:
+            clear(sleep=True)
+            print(
+                f"Weigh the importance of your tasks - which of these tasks will contribute the most to your goals "
+                f"and development?\nMake sure the weights add up to 100.")
+            for step in daily_steps_temp.keys():
+                try:
+                    daily_steps_temp[step] = int(input(f"{step}: "))
+                except ValueError as E:
+                    initial_setup()
+            if sum(daily_steps_temp.values()) != 100:
+                print("Weights did not add up to 100. Restarting.")
+                initial_setup()
+            else:
+                break
+
+        clear(sleep=True)
+        print(f"End Date for Goals:\n"
+              f"{horizon}\n")
+        print("Task and Weighting:")
+
+        for pair in daily_steps_temp.items():
+            print(f"{pair[0].ljust(20)}{pair[1]}")
+        if input("\nWould you like to finalise your companion? (y/n): ") != 'y':
+            initial_setup()
+        else:
+            return {'start_date': (dt_morph(dt.datetime.today())), 'end_date': horizon}, \
+                   daily_steps_temp, \
+                   (dt_morph(horizon, reverse=True) - dt.datetime.today()).total_seconds() / 86400
+
+
+# Default tasks for everyday.
+def default():
+    if cd in tasks.keys():
+        return
+    else:
+        for task in daily_tasks:
+            description_temp = {"task": task,
+                                "completed": False,
+                                "default": True,
+                                "weighting": daily_tasks[task]}
+            if cd not in tasks.keys():
+                tasks[cd] = {}
+                tasks[cd][1] = description_temp
+            elif cd in tasks.keys():
+                list_of_tasks = list((tasks[cd].keys()))
+                tasks[cd][(list_of_tasks[-1] + 1)] = description_temp
+
 
 # If no previous log.json is located, create one from scratch.
 if not os.path.exists('log.json'):
@@ -34,29 +119,26 @@ else:
 today = dt.date.today()
 cd = today.strftime("%d/%m/%Y")  # Current Date.
 
-
-# Clear Command Line output for improving readability.
-def clear(sleep=False):
-    os.system('cls')
-    if sleep:
-        time.sleep(1)
-
-
-# Function used throughout to improve interface.
-def new_lines(number_of_lines):
-    for i in range(number_of_lines):
-        print()
-    time.sleep(1)
-
-
-# Datetime Object to String and Vice Versa function.
-def dt_morph(object, reverse=False, circular=False):
-    if reverse:
-        return dt.datetime.strptime(object, '%d/%m/%Y')
-    elif circular:
-        return dt.datetime.strptime(object, '%d/%m/%Y').strftime("%d/%m/%Y")
+try:
+    if not os.path.exists('user_data.json'):
+        user_data, daily_tasks, initial_days_remaining = initial_setup()
+        # Creating persistence for the initial setup.
+        with open('user_data.json', 'w') as data_output:
+            json.dump(user_data, data_output)
+        with open('daily_tasks.json', 'w') as task_output:
+            json.dump(daily_tasks, task_output)
+        with open('days_remaining.json', 'w') as days_r_output:
+            json.dump(initial_days_remaining, days_r_output)
+        default()
     else:
-        return object.strftime("%d/%m/%Y")
+        with open('user_data.json') as data_input:
+            user_data = json.load(data_input)
+        with open('daily_tasks.json') as task_input:
+            daily_tasks = json.load(task_input)
+        with open('days_remaining.json') as daysr_input:
+            initial_days_remaining = json.load(daysr_input)
+except:
+    print(f"Something went wrong.")
 
 
 # Interface that user interacts with TO-DO list through.
@@ -168,102 +250,32 @@ def archive():
             print("Error Occurred: Exiting.")
 
 
-# Default tasks for everyday - change to your preference.
-def default():
-    if cd in tasks.keys():
-        return
-    else:
-        default_tasks = [
-            'TEST 1',
-            'TEST 2',
-            'TEST 3',
-            'TEST 4',
-            'TEST 5',
-        ]
-        for task in default_tasks:
-            description_temp = {"task": task,
-                                "completed": False}
-            if cd not in tasks.keys():
-                tasks[cd] = {}
-                tasks[cd][1] = description_temp
-            elif cd in tasks.keys():
-                list_of_tasks = list((tasks[cd].keys()))
-                tasks[cd][(list_of_tasks[-1] + 1)] = description_temp
+default()
 
 
-# TODO: Create "Default" key within each task so that the script cannot get confused by duplicate user input.
-# TODO: Create persistence for the user_data and daily_steps - create conditionals at the beginning of script to check
-# TODO: whether they exist or not, so that initial_setup() can be ran respectively.
-def initial_setup():
-    clear(sleep=True)
-    print("Executing Initial Setup...")
-    time.sleep(1)
-    date_format = re.compile(r'^([0-2][0-9]|(3)[0-1])(/)(((0)[0-9])|((1)[0-2]))(/)\d{4}$')
-
-    while True:
-        horizon = input("End Date for Goal (dd/mm/yyyy): ")
-        if not date_format.search(horizon):
-            initial_setup()
-        horizon = dt_morph(horizon, circular=True)
-        daily_steps_temp = {}
-        print("Enter the daily tasks that will bring you closer to your goal/s. Press'ENTER' to cancel.")
-
-        i = 1
-        while (small_step := input(f"Task {i}: ")) != '':
-            daily_steps_temp[small_step] = None
-            i += 1
-        i -= 1
-
-        while True:
-            clear(sleep=True)
-            print(
-                f"Weigh the importance of your tasks - which of these tasks will contribute the most to your goals "
-                f"and development?\nMake sure the weights add up to 100.")
-            for step in daily_steps_temp.keys():
-                try:
-                    daily_steps_temp[step] = int(input(f"{step}: "))
-                except ValueError as E:
-                    initial_setup()
-            if sum(daily_steps_temp.values()) != 100:
-                print("Weights did not add up to 100. Restarting.")
-                initial_setup()
-            else:
-                break
-
-        clear(sleep=True)
-        print(f"End Date for Goals:\n"
-              f"{horizon}\n")
-        print("Task and Weighting:")
-
-        for pair in daily_steps_temp.items():
-            print(f"{pair[0].ljust(20)}{pair[1]}")
-        if input("\nWould you like to finalise your companion? (y/n): ") != 'y':
-            initial_setup()
-        else:
-            return {'start_date': (dt_morph(dt.datetime.today())), 'end_date': horizon}, \
-                   daily_steps_temp, \
-                   (dt_morph(horizon, reverse=True) - dt.datetime.today()).total_seconds() / 86400
-
-
-user_data, daily_steps, days_remaining = initial_setup()
-
-
-# TODO: Make it so that the progress towards the horizon is re-calculated every time the app is opened.
-# TODO: Update progress bar accordingly if a date/s is missed in-between two other dates.
-# TODO: You need to find a way to:
-#  - apply weightings to calculate percentage growth per-day
 # Progress bar to visualise long term progress.
 def progress_bar():
     progress = 100
-    divisor = (days_remaining / 100)
-    for k, day in enumerate((dates := list(tasks.keys()))):
-        if (difference :=
-        (dt_morph(day, reverse=True).total_seconds()) - (dt_morph(dates[k + 1], reverse=True).total_seconds())) > 86400:
-            progress -= ((difference - 86400) / 86400) / divisor
-        for i in (internal_tasks := list(tasks[day].keys())):
-            for j in internal_tasks:
-                if not tasks[day][j]['completed'] and tasks[day][j]['default']:
-                    progress -= (tasks[day][j]['weighting'] / divisor)
+    divisor = (initial_days_remaining / 100)
+    if len(tasks) == 0:
+        progress -= progress
+    else:
+        progress -= progress - (len(tasks)/divisor)
+    if len(tasks.keys()) == 1:
+        for i in (internal_tasks := list(tasks[cd].keys())):
+            if not tasks[cd][i]['completed'] and tasks[cd][i]['default']:
+                progress -= (tasks[cd][i]['weighting'] / 100 / divisor)
+
+    if len(tasks.keys()) > 1:
+        for days in tuple(zip(list(tasks.keys()))):
+            if (difference :=
+            (dt_morph(days[1], reverse=True).total_seconds()) - (dt_morph(days[0], reverse=True).total_seconds())) > 86400:
+                progress -= ((difference - 86400) / 86400) / divisor
+            for i in (internal_tasks := list(tasks[days[0]].keys())):
+                for j in internal_tasks:
+                    print(internal_tasks)
+                    if not tasks[days[0]][j]['completed'] and tasks[days[0]][j]['default']:
+                        progress -= (tasks[days[0]][j]['weighting'] / divisor)
     for i in range(100):
         if i == 0:
             print('0% ', end='')
@@ -272,15 +284,15 @@ def progress_bar():
         else:
             print('░', end='')
     print(' 100%')
+    rounded_progress = "{:.2f}".format(progress)
+    print(f"You are at {rounded_progress} %".rjust(50))
+    print(f"You have {round(dt_morph(user_data['end_date'], reverse=True).total_seconds() - ((dt_morph(cd, reverse=True)).total_seconds()) / 86400)}".rjust(50))
 
-
-
-
-# Adding default tasks.
-# default()
 # Initiating loop to allow for consecutive additions/removals of tasks.
-"""
 while True:
+    progress_bar()
+    time.sleep(2)
+    clear()
     print("______________________________________")
     if cd in tasks.keys():
         for n_task in tasks[cd].keys():
@@ -323,7 +335,7 @@ while True:
     except ValueError:
         print("Unexpected input received, try again.")
         clear()
-"""
-# Creating persistence.
-with open('log.json', 'w') as outfile:
-    json.dump(tasks, outfile)
+
+# Creating persistence for tasks.
+with open('log.json', 'w') as db_output:
+    json.dump(tasks, db_output)
