@@ -5,9 +5,6 @@ import os
 import re
 
 
-# TODO: Create persistence for the user_data and daily_steps - create conditionals at the beginning of script to check
-# TODO: whether they exist or not, so that initial_setup() can be ran respectively.
-
 # Clear Command Line output for improving readability.
 def clear(sleep=False):
     os.system('cls')
@@ -60,7 +57,7 @@ def initial_setup():
             for step in daily_steps_temp.keys():
                 try:
                     daily_steps_temp[step] = int(input(f"{step}: "))
-                except ValueError as E:
+                except ValueError:
                     initial_setup()
             if sum(daily_steps_temp.values()) != 100:
                 print("Weights did not add up to 100. Restarting.")
@@ -78,6 +75,7 @@ def initial_setup():
         if input("\nWould you like to finalise your companion? (y/n): ") != 'y':
             initial_setup()
         else:
+            clear()
             return {'start_date': (dt_morph(dt.datetime.today())), 'end_date': horizon}, \
                    daily_steps_temp, \
                    (dt_morph(horizon, reverse=True) - dt.datetime.today()).total_seconds() / 86400
@@ -146,23 +144,23 @@ def interface():
     # If a record exists for the current date.
     if cd in tasks.keys() and tasks[cd].keys():
         lack = True
-        u_query = int(input(("""What would you like to do?:
-1. Add Task
-2. Mark Completion
-3. Remove Task
-4. Remove All
-8. Progress
-9. View Archive
-0. Exit
-""")))
+        u_query = int(input(
+            "1. Add Task \n"
+            "2. Mark Completion \n"
+            "3. Remove Task \n"
+            "4. Remove All \n"
+            "7. Reset \n"
+            "8. Progress \n"
+            "9. View Archive \n"
+            "0. Exit \n"))
     else:
         lack = False
-        u_query = int(input("""What would you like to do?:
-1. Add Task
-8. Progress
-9. View Archive
-0. Exit
-"""))
+        u_query = int(input(
+            "1. Add Task \n"
+            "7. Reset \n"
+            "8. Progress \n"
+            "9. View Archive \n"
+            "0. Exit \n"))
     return u_query, lack
 
 
@@ -172,7 +170,8 @@ def add_task():
     if description_task == '':
         return description_task
     description_template = {"task": description_task,
-                            "completed": False}
+                            "completed": False,
+                            "default": False}
     # If current date doesn't exist in the persistence, create one.
     if cd not in tasks.keys():
         tasks[cd] = {}
@@ -188,7 +187,7 @@ def completion():
     time.sleep(0.5)
 
     while (index := int(input("Enter Task: "))) > len(list(tasks[cd].keys())):
-        print("That task doesn't exist. Try again.")
+        print("That task doesn't exist, try again.")
     else:
         task_completed = tasks[cd][index]['completed']
         if task_completed:
@@ -216,6 +215,23 @@ def remove_task(everything=False):
         for key_index in range(1, len(tasks[cd].keys()) + 2):
             if key_index > user_index:
                 tasks[cd][key_index - 1] = tasks[cd].pop(key_index)
+
+
+def reset():
+    if input("Are you sure you want to reset? This process cannot be reversed. (y/n)\n") != 'y':
+        return
+    print("Resetting...")
+    time.sleep(1)
+    if os.path.exists("log.json"):
+        os.remove("log.json")
+    if os.path.exists("user_data.json"):
+        os.remove("user_data.json")
+    if os.path.exists("daily_tasks.json"):
+        os.remove("daily_tasks.json")
+    if os.path.exists("days_remaining.json"):
+        os.remove("days_remaining.json")
+    print("Complete.")
+    exit()
 
 
 # Visual access to persistence, navigated via date in DD/MM/YYYY format.
@@ -257,25 +273,33 @@ default()
 def progress_bar():
     progress = 100
     divisor = (initial_days_remaining / 100)
+    print(divisor)
     if len(tasks) == 0:
         progress -= progress
+        print(progress)
     else:
-        progress -= progress - (len(tasks)/divisor)
+        print(progress)
+        progress -= progress - (len(tasks) / divisor)
+        print(progress)
     if len(tasks.keys()) == 1:
-        for i in (internal_tasks := list(tasks[cd].keys())):
+        for i in (list(tasks[cd].keys())):
             if not tasks[cd][i]['completed'] and tasks[cd][i]['default']:
                 progress -= (tasks[cd][i]['weighting'] / 100 / divisor)
+                print(progress)
 
     if len(tasks.keys()) > 1:
         for days in tuple(zip(list(tasks.keys()))):
-            if (difference :=
-            (dt_morph(days[1], reverse=True).total_seconds()) - (dt_morph(days[0], reverse=True).total_seconds())) > 86400:
-                progress -= ((difference - 86400) / 86400) / divisor
+            if len(days) > 1:
+                if (difference :=
+                (dt_morph(days[1], reverse=True).total_seconds()) - (
+                        dt_morph(days[0], reverse=True).total_seconds())) > 86400:
+                    progress -= ((difference - 86400) / 86400) / divisor
+                    print(progress)
             for i in (internal_tasks := list(tasks[days[0]].keys())):
                 for j in internal_tasks:
-                    print(internal_tasks)
                     if not tasks[days[0]][j]['completed'] and tasks[days[0]][j]['default']:
                         progress -= (tasks[days[0]][j]['weighting'] / divisor)
+                        print(progress)
     for i in range(100):
         if i == 0:
             print('0% ', end='')
@@ -285,14 +309,15 @@ def progress_bar():
             print('░', end='')
     print(' 100%')
     rounded_progress = "{:.2f}".format(progress)
-    print(f"You are at {rounded_progress} %".rjust(50))
-    print(f"You have {round(dt_morph(user_data['end_date'], reverse=True).total_seconds() - ((dt_morph(cd, reverse=True)).total_seconds()) / 86400)}".rjust(50))
+    print(f"You are at {rounded_progress} %")
+    print(
+        f"You have {round((dt_morph(user_data['end_date'], reverse=True) - (dt_morph(cd, reverse=True))).total_seconds() / 86400)} days remaining.")
+
 
 # Initiating loop to allow for consecutive additions/removals of tasks.
 while True:
     progress_bar()
-    time.sleep(2)
-    clear()
+    time.sleep(1)
     print("______________________________________")
     if cd in tasks.keys():
         for n_task in tasks[cd].keys():
@@ -322,6 +347,8 @@ while True:
         elif query == 4 and occupied:
             remove_task(everything=True)
             clear()
+        elif query == 7:
+            reset()
         elif query == 8 and occupied:
             progress_bar()
             clear()
