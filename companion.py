@@ -273,19 +273,19 @@ default()
 def progress_bar():
     progress = 100
     divisor = (initial_days_remaining / 100)
-    print(divisor)
+    print(divisor, '1')
     if len(tasks) == 0:
         progress -= progress
-        print(progress)
+        print(progress, '2')
     else:
-        print(progress)
+        print(progress, '3')
         progress -= progress - (len(tasks) / divisor)
-        print(progress)
+        print(progress, '4')
     if len(tasks.keys()) == 1:
         for i in (list(tasks[cd].keys())):
             if not tasks[cd][i]['completed'] and tasks[cd][i]['default']:
                 progress -= (tasks[cd][i]['weighting'] / 100 / divisor)
-                print(progress)
+                print(progress, '5')
 
     if len(tasks.keys()) > 1:
         for days in tuple(zip(list(tasks.keys()))):
@@ -294,12 +294,14 @@ def progress_bar():
                 (dt_morph(days[1], reverse=True).total_seconds()) - (
                         dt_morph(days[0], reverse=True).total_seconds())) > 86400:
                     progress -= ((difference - 86400) / 86400) / divisor
-                    print(progress)
-            for i in (internal_tasks := list(tasks[days[0]].keys())):
-                for j in internal_tasks:
-                    if not tasks[days[0]][j]['completed'] and tasks[days[0]][j]['default']:
-                        progress -= (tasks[days[0]][j]['weighting'] / divisor)
-                        print(progress)
+                    print(progress, '6')
+        for i in list(tasks.keys()):
+            print(i)
+            for j in tasks[i]:
+                print(j)
+                if tasks[i][j]['default'] and not tasks[i][j]['completed']:
+                    progress -= (tasks[i][j]['weighting'] / divisor)
+                    print(progress, '7')
     for i in range(100):
         if i == 0:
             print('0% ', end='')
