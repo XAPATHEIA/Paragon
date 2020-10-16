@@ -4,6 +4,9 @@ import datetime as dt
 import os
 import re
 
+storage_location = f'C:\\Users\\{os.getlogin()}\\Documents\\Paragon'
+os.chdir(storage_location)
+
 
 # Clear Command Line output for improving readability.
 def clear(sleep=False):
@@ -271,49 +274,54 @@ default()
 
 # Progress bar to visualise long term progress.
 def progress_bar():
-    progress = 100
+    maximum_percentage = 100
+
+    def progress_display(internal_progress, void_internal_progress=None):
+
+        for i in range(100):
+            if i == 0:
+                print('0% ', end='')
+            if i < internal_progress:
+                print('█', end='')
+            if void_internal_progress:
+                if maximum_percentage - void_internal_progress > i > internal_progress:
+                    print('▒', end='')
+            else:
+                print('░', end='')
+        print(' 100%')
+
+        rounded_progress = "{:.2f}".format(internal_progress)
+        print(f"You are at {rounded_progress} %.")
+        if void_internal_progress:
+            rounded_void_progress = "{:.2f}".format(void_internal_progress)
+            print(f"You have missed out on {rounded_void_progress} %.")
+        print(
+            f"You have {round((dt_morph(user_data['end_date'], reverse=True) - (dt_morph(cd, reverse=True))).total_seconds() / 86400)} days remaining.")
+
+    progress = 0
+    void_progress = 0
     divisor = (initial_days_remaining / 100)
-    print(divisor, '1')
-    if len(tasks) == 0:
-        progress -= progress
-        print(progress, '2')
-    else:
-        print(progress, '3')
-        progress -= progress - (len(tasks) / divisor)
-        print(progress, '4')
+
     if len(tasks.keys()) == 1:
         for i in (list(tasks[cd].keys())):
-            if not tasks[cd][i]['completed'] and tasks[cd][i]['default']:
-                progress -= (tasks[cd][i]['weighting'] / 100 / divisor)
-                print(progress, '5')
+            if tasks[cd][i]['completed'] and tasks[cd][i]['default']:
+                progress += (tasks[cd][i]['weighting'] / 100 / divisor)
 
     if len(tasks.keys()) > 1:
-        for days in tuple(zip(list(tasks.keys()))):
+        for days in tuple(zip(list(tasks.keys()), list(tasks.keys())[1:])):
             if len(days) > 1:
-                if (difference :=
-                (dt_morph(days[1], reverse=True).total_seconds()) - (
-                        dt_morph(days[0], reverse=True).total_seconds())) > 86400:
-                    progress -= ((difference - 86400) / 86400) / divisor
-                    print(progress, '6')
+                if (difference := ((dt_morph(days[1], reverse=True)) -
+                                   (dt_morph(days[0], reverse=True))).total_seconds()) > 86400:
+                    void_progress += ((difference - 86400) / 86400) / divisor
+
         for i in list(tasks.keys()):
-            print(i)
             for j in tasks[i]:
-                print(j)
-                if tasks[i][j]['default'] and not tasks[i][j]['completed']:
-                    progress -= (tasks[i][j]['weighting'] / divisor)
-                    print(progress, '7')
-    for i in range(100):
-        if i == 0:
-            print('0% ', end='')
-        if i < progress:
-            print('█', end='')
-        else:
-            print('░', end='')
-    print(' 100%')
-    rounded_progress = "{:.2f}".format(progress)
-    print(f"You are at {rounded_progress} %")
-    print(
-        f"You have {round((dt_morph(user_data['end_date'], reverse=True) - (dt_morph(cd, reverse=True))).total_seconds() / 86400)} days remaining.")
+                if tasks[i][j]['default'] and not tasks[i][j]['completed'] and i != cd:
+                    void_progress += (tasks[i][j]['weighting'] / 100 / divisor)
+                elif tasks[i][j]['default'] and tasks[i][j]['completed'] and i != cd:
+                    progress += (tasks[i][j]['weighting'] / 100 / divisor)
+
+    progress_display(progress, void_progress)
 
 
 # Initiating loop to allow for consecutive additions/removals of tasks.
