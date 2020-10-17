@@ -5,7 +5,11 @@ import os
 import re
 
 storage_location = f'C:\\Users\\{os.getlogin()}\\Documents\\Paragon'
-os.chdir(storage_location)
+if os.path.isdir(storage_location):
+    os.chdir(storage_location)
+else:
+    os.mkdir(storage_location)
+    os.chdir(storage_location)
 
 
 # Clear Command Line output for improving readability.
@@ -281,11 +285,10 @@ def progress_bar():
         for i in range(100):
             if i == 0:
                 print('0% ', end='')
-            if i < internal_progress:
+            elif i < internal_progress:
                 print('█', end='')
-            if void_internal_progress:
-                if maximum_percentage - void_internal_progress > i > internal_progress:
-                    print('▒', end='')
+            elif void_internal_progress and i > maximum_percentage - void_internal_progress:
+                print('×', end='')
             else:
                 print('░', end='')
         print(' 100%')
