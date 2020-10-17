@@ -321,7 +321,7 @@ def progress_bar():
             for j in tasks[i]:
                 if tasks[i][j]['default'] and not tasks[i][j]['completed'] and i != cd:
                     void_progress += (tasks[i][j]['weighting'] / 100 / divisor)
-                elif tasks[i][j]['default'] and tasks[i][j]['completed'] and i != cd:
+                elif tasks[i][j]['default'] and tasks[i][j]['completed']:
                     progress += (tasks[i][j]['weighting'] / 100 / divisor)
 
     progress_display(progress, void_progress)
