@@ -247,9 +247,12 @@ def archive():
     while True:
         try:
             selection = int(input("1. Enter Archive\n"
-                                  "2. Exit\n"))
-            if selection == 2:
+                                  "2. Edit\n"
+                                  "3. Exit"))
+            if selection == 3:
                 break
+            elif selection == 2:
+            # TODO: Add edit 24H edit capacity
             elif selection == 1:
                 for j in range(len(dates)):
                     if (j + 1) % 4 == 0:  # New line every 4 dates, so as to look better.
