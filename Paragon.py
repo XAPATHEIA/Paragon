@@ -1,4 +1,5 @@
 import json
+import math
 import time
 import datetime as dt
 import os
@@ -247,12 +248,9 @@ def archive():
     while True:
         try:
             selection = int(input("1. Enter Archive\n"
-                                  "2. Edit\n"
-                                  "3. Exit"))
-            if selection == 3:
+                                  "2. Exit\n"))
+            if selection == 2:
                 break
-            elif selection == 2:
-            # TODO: Add edit 24H edit capacity
             elif selection == 1:
                 for j in range(len(dates)):
                     if (j + 1) % 4 == 0:  # New line every 4 dates, so as to look better.
@@ -300,9 +298,11 @@ def progress_bar():
         print(f"You are at {rounded_progress} %.")
         if void_internal_progress:
             rounded_void_progress = "{:.2f}".format(void_internal_progress)
-            print(f"You have missed out on {rounded_void_progress} %.")
+            print(f"Your ideal self is {rounded_void_progress} % ahead of you.")
+            print(f"You are {math.floor((divisor * void_internal_progress))} days behind your ideal self.")
         print(
             f"You have {round((dt_morph(user_data['end_date'], reverse=True) - (dt_morph(cd, reverse=True))).total_seconds() / 86400)} days remaining.")
+            
 
     progress = 0
     void_progress = 0
