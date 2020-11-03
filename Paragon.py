@@ -5,6 +5,7 @@ import datetime as dt
 import os
 import re
 
+# Setting working directory
 storage_location = f'C:\\Users\\{os.getlogin()}\\Documents\\Paragon'
 if os.path.isdir(storage_location):
     os.chdir(storage_location)
@@ -22,7 +23,7 @@ def clear(sleep=False):
 
 # Function used throughout to improve interface.
 def new_lines(number_of_lines):
-    for i in range(number_of_lines):
+    for _ in range(number_of_lines):
         print()
     time.sleep(1)
 
@@ -217,7 +218,8 @@ def remove_task(everything=False):
             del tasks[cd]
             return
     else:
-        while (user_index := int(input("Enter Task: "))) > len(list(tasks[cd].keys())) or user_index < 1:
+        user_index = int(input("Enter Task: "))
+        while user_index > len(list(tasks[cd].keys())) or user_index < 1: 
             print("That task doesn't exist. Try again.")
         del tasks[cd][user_index]
         for key_index in range(1, len(tasks[cd].keys()) + 2):
