@@ -242,6 +242,7 @@ def reset():
     exit()
 
 
+# TODO: Add 24H edit functionality
 # Visual access to persistence, navigated via date in DD/MM/YYYY format.
 def archive():
     dates = list(tasks.keys())
